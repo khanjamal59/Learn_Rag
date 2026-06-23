@@ -2,6 +2,7 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
+from langchain_groq import ChatGroq
 loader = PyPDFLoader("laxmiprasad.pdf")
 documents = loader.load()
 
@@ -27,8 +28,25 @@ print("emdeding successfully done")
 #creating the retriver 
 retriever=vectorstore.as_retriever(search_kwargs={"k":3})
 #testing the retrival
-query=" what does Puskar Shumsher Rana challenged ?"
+query=" when was devkota born ?"
 docs=retriever.invoke(query)
-for doc in docs:
-    print(doc.page_content)
-    print("-"*50)
+context="\n\n".join([doc.page_content for doc in docs])
+prompt = f"""
+Answer the question using only the provided context.
+
+Context:
+{context}
+
+Question:
+{query}
+
+Answer:
+"""
+#adding the llm 
+
+llm=ChatGroq(
+    api_key="your_api_key",
+    model="llama-3.3-70b-versatile"
+)
+response=llm.invoke(prompt)
+print(response.content)
